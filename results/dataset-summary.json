@@ -1,0 +1,16 @@
+{
+  "changeRatio" : 0.04651092547262482,
+  "totalPairsCount" : 637,
+  "trainPairs" : 445,
+  "validationPairs" : 64,
+  "testPairs" : 128,
+  "validPairs" : 637,
+  "invalidPairs" : 0,
+  "missingFiles" : 0,
+  "imageDimensions" : "1024x1024",
+  "maskDimensions" : "1024x1024",
+  "changedPixelCount" : 31066643,
+  "unchangedPixelCount" : 636876269,
+  "totalProcessedTiles" : 240,
+  "processingTimeMs" : 203807
+}

@@ -1,0 +1,10 @@
+metric,pixel_count
+true_positives,186614
+true_negatives,3111448
+false_positives,1742804
+false_negatives,202014
+mean_iou,0.0790
+mean_f1,0.1222
+mean_precision,0.0901
+mean_recall,0.2728
+mean_area_error_pixels,19259.9

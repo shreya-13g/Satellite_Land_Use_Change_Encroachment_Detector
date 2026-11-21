@@ -1,0 +1,14 @@
+metric,value
+number_of_train_pairs,445
+number_of_validation_pairs,64
+number_of_test_pairs,128
+number_of_valid_pairs,637
+number_of_invalid_pairs,0
+number_of_missing_files,0
+image_dimensions,1024x1024
+mask_dimensions,1024x1024
+changed_pixel_count,31066643
+unchanged_pixel_count,636876269
+change_pixel_ratio,0.046511
+total_processed_tiles,240
+processing_time_ms,203807

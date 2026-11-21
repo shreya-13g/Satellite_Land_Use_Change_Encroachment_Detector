@@ -1,0 +1,11 @@
+@echo off
+setlocal
+
+set "DIR=%~dp0"
+if not defined JAVA_HOME (
+    set "JAVA_HOME=C:\Program Files\Java\jdk-25.0.2"
+)
+set "MAVEN_HOME=%DIR%.tools\apache-maven-3.9.6"
+set "LOCAL_REPO=%DIR%.m2\repository"
+
+"%MAVEN_HOME%\bin\mvn.cmd" -Dmaven.repo.local="%LOCAL_REPO%" %*

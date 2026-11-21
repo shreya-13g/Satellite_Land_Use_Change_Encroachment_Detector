@@ -1,0 +1,36 @@
+{
+  "project": "Satellite Land Use Change and Encroachment Detector",
+  "version": "1.0.0",
+  "domain": "Geospatial Intelligence",
+  "spatialReference": {
+    "crs": "EPSG:32643",
+    "utmZone": "43N",
+    "groundSamplingDistanceMeters": 10.0
+  },
+  "tiling": {
+    "tileWidth": 256,
+    "tileHeight": 256,
+    "stride": 256,
+    "channels": 4,
+    "channelNames": ["B04_RED", "B03_GREEN", "B02_BLUE", "B08_NIR"]
+  },
+  "lulcClasses": [
+    {"id": 0, "name": "WATER", "colorHex": "#0000FF", "protectedDefault": true},
+    {"id": 1, "name": "DENSE_FOREST", "colorHex": "#006400", "protectedDefault": true},
+    {"id": 2, "name": "SPARSE_VEGETATION", "colorHex": "#32CD32", "protectedDefault": false},
+    {"id": 3, "name": "CROPLAND", "colorHex": "#FFFF00", "protectedDefault": false},
+    {"id": 4, "name": "BUILT_UP", "colorHex": "#FF0000", "protectedDefault": false},
+    {"id": 5, "name": "BARE_SOIL_EXCAVATION", "colorHex": "#8B4513", "protectedDefault": false}
+  ],
+  "encroachmentRules": {
+    "protectedZonesCadastralPath": "data/cadastral/protected_forest_boundary.geojson",
+    "bufferDistanceMeters": 50.0,
+    "minimumAlertAreaSqMeters": 500.0,
+    "confidenceThreshold": 0.75,
+    "criticalTransitions": [
+      {"from": "DENSE_FOREST", "to": "BUILT_UP", "severity": "HIGH"},
+      {"from": "DENSE_FOREST", "to": "BARE_SOIL_EXCAVATION", "severity": "CRITICAL"},
+      {"from": "WATER", "to": "BUILT_UP", "severity": "CRITICAL"}
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+target/
+.m2/
+.tools/
+dependency-reduced-pom.xml
+*.class
+*.log
+.idea/
+*.iml
+.vscode/
+# Build and tool files
+target/
+.m2/
+.tools/
+dependency-reduced-pom.xml
+
+# Large dataset files
+*.zip
+data/LEVIR-CD/
+data/processed/LEVIR-CD/
+
+# IDE files
+.vscode/
+.idea/
