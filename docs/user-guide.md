@@ -1,6 +1,6 @@
-# Satellite Land Use Change & Encroachment Detector — User Guide
+# GeoShield — Satellite Land Use Change & Encroachment Detector — User Guide
 
-This user guide provides step-by-step instructions for setting up, building, running, and demonstrating the **Satellite Land Use Change and Encroachment Detector** system.
+This user guide provides step-by-step instructions for setting up, building, running, and demonstrating the **GeoShield** system.
 
 ---
 
@@ -25,20 +25,33 @@ This user guide provides step-by-step instructions for setting up, building, run
 .\mvnw.cmd package -DskipTests
 ```
 
+### macOS / Linux
+```bash
+# Compile and run automated JUnit 5 unit tests
+./mvnw test
+
+# Build executable Uber-JAR
+./mvnw package -DskipTests
+```
+
 The resulting executable artifact is created at:
 `target/satellite-detector.jar`
 
 ---
 
-## 3. Running the Graphical Streamlit Dashboard
+## 3. Running the Graphical GeoShield Dashboard
 
-To launch the interactive web dashboard for demonstrations:
+To launch the interactive web dashboard for demonstrations and visual evaluation:
 
-```powershell
-# 1. Install dashboard dependencies (Streamlit, Pillow, Pandas)
+```bash
+# 1. (Recommended) Activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# 2. Install dashboard dependencies (Streamlit, Pillow, Pandas)
 pip install -r dashboard/requirements.txt
 
-# 2. Start the Streamlit application
+# 3. Start the GeoShield application
 streamlit run dashboard/app.py
 ```
 
@@ -52,20 +65,21 @@ Open your browser at `http://localhost:8501`.
    - Click **Run Change Detection** to execute the Java ONNX inference pipeline.
    - View Before (T1), After (T2), Predicted Masks, and Bounding Box clusters.
    - View real-time KPIs: Screening status, Changed Area (px and %), IoU, F1, Recall.
+   - **Export Suite:** One-click downloads for Change Mask (PNG), Bounding Boxes (PNG), Confusion Overlay (PNG), and formal Screening Inspection Report (JSON).
 2. **Model Benchmarks Tab:**
-   - Head-to-head empirical metrics table (Precision, Recall, F1, IoU, Runtime).
+   - Head-to-head empirical metrics table (Precision, Recall, F1, IoU, Runtime) with CSV download.
    - Visual diagnostic comparison chart and 2x2 confusion matrix heatmap.
    - Candidate architectural taxonomy (R-CNN, YOLO, RetinaNet, GoogLeNet).
 3. **Fundamentals & Ablations Tab:**
    - 4-Optimizer convergence curves (BGD, SGD, Momentum, Nesterov).
-   - Overfitting vs generalization study curve (Train vs Validation loss).
-   - Full hyperparameter ablation matrix.
+   - Overfitting vs generalization study curve (Train vs Validation loss) with CSV export.
+   - Full hyperparameter ablation matrix with CSV export.
 4. **Temporal LSTM & Generative Models Tab:**
    - 2D/3D Convolution feature maps.
-   - Multitemporal sequence forecasting using gated LSTM cell and Transformer self-attention.
+   - Multitemporal sequence forecasting using gated LSTM cell and Transformer self-attention with CSV export.
    - VAE latent-space organization scatter plot and synthesized augmented patches.
 5. **Robustness & Error Analysis Tab:**
-   - Noise, illumination, contrast, and spatial misregistration stress test results.
+   - Noise, illumination, contrast, and spatial misregistration stress test results with CSV export.
    - Detailed failure mode analysis and responsible-use limits.
 
 ---

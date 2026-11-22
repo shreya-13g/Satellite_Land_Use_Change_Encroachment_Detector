@@ -219,8 +219,12 @@ public class AblationRunner {
         try (BufferedWriter w = Files.newBufferedWriter(csvPath)) {
             w.write("category,configuration,final_loss,final_accuracy,epochs\n");
             for (AblationRecord r : records) {
+                String conf = r.getConfiguration();
+                if (conf.contains(",")) {
+                    conf = "\"" + conf + "\"";
+                }
                 w.write(String.format("%s,%s,%.6f,%.4f,%d\n",
-                        r.getCategory(), r.getConfiguration(), r.getFinalLoss(), r.getFinalAccuracy(), r.getEpochs()));
+                        r.getCategory(), conf, r.getFinalLoss(), r.getFinalAccuracy(), r.getEpochs()));
             }
         }
 

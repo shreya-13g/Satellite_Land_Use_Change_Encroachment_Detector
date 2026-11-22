@@ -1,10 +1,11 @@
-# Satellite Land Use Change and Encroachment Detector
+# GeoShield — Satellite Land Use Change and Encroachment Detector
 
 [![Java](https://img.shields.io/badge/Java-21%20%7C%2025%20LTS-ED8B00?style=flat&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
 [![Maven](https://img.shields.io/badge/Maven-3.9.6-C71A36?style=flat&logo=apachemaven&logoColor=white)](https://maven.apache.org/)
 [![JUnit 5](https://img.shields.io/badge/JUnit-5.10.2-25A162?style=flat&logo=junit5&logoColor=white)](https://junit.org/junit5/)
 [![ONNX Runtime](https://img.shields.io/badge/ONNX%20Runtime-1.17.1-005CED?style=flat)](https://onnxruntime.ai/)
 [![Domain](https://img.shields.io/badge/Domain-Geospatial%20Intelligence-blue)](https://en.wikipedia.org/wiki/Geospatial_intelligence)
+[![UI](https://img.shields.io/badge/GUI-GeoShield%20Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)](https://streamlit.io/)
 
 An automated bi-temporal satellite image change detection and potential encroachment screening system built in **Java** with **ONNX Runtime (CPU)**. Designed for an undergraduate Semester-V curriculum with transparent, explainable algorithms, a rigorous classical baseline, a genuine deep-learning model, and course deep-learning fundamentals.
 
@@ -147,12 +148,19 @@ Here is a summary of the components implemented, verified, and benchmarked:
 .\mvnw.cmd package
 ```
 
-### 3. Launch Graphical Web Dashboard (Streamlit)
+### 3. Launch Graphical Web Dashboard (GeoShield GUI)
 ```powershell
+# Option A: With virtual environment
+python -m venv .venv
+# On Windows: .venv\Scripts\activate | On macOS/Linux: source .venv/bin/activate
 pip install -r dashboard/requirements.txt
 streamlit run dashboard/app.py
 ```
-Open `http://localhost:8501` to use the interactive dashboard: select or upload satellite image tiles, adjust thresholds/Otsu, inspect before/after side-by-side, view predicted change masks and bounding boxes, and explore model benchmarks.
+Open `http://localhost:8501` to access the interactive **GeoShield** workstation:
+- **Interactive Screening Tab:** Select built-in LEVIR-CD tiles or upload custom multi-temporal imagery, toggle Otsu thresholding, adjust cluster filters, view bounding boxes, and export results.
+- **Export & Download Suite:** One-click downloads for predicted change masks (PNG), bounding boxes (PNG), confusion overlays (PNG), and full audit-ready screening reports (JSON).
+- **Benchmark & Matrix Tab:** Inspect real-time comparisons between Classical Baseline and Siamese ResNet-18, confusion matrices, and candidate architectural taxonomies.
+- **Course Fundamentals & Ablation Tabs:** Visualize optimizer loss convergence, overfitting vs generalization curves, convolution spatial filters, temporal LSTM projections, and environmental robustness stress tests.
 
 ### 4. Run One-Click Demonstration (CLI)
 ```powershell

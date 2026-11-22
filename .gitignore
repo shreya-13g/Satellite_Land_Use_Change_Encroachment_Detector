@@ -18,6 +18,9 @@ dependency-reduced-pom.xml
 data/LEVIR-CD/
 data/processed/LEVIR-CD/
 
-# IDE files
-.vscode/
-.idea/
+# Python environment and cache
+.venv/
+venv/
+__pycache__/
+*.pyc
+

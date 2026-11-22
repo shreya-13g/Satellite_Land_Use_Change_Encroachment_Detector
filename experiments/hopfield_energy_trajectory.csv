@@ -1,0 +1,4 @@
+step,state,energy,is_stable,matches_target
+0,----+,0.4000,false,false
+1,++--+,-2.0000,false,true
+2,++--+,-2.0000,true,true
