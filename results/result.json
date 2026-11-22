@@ -1,8 +1,8 @@
 {
   "dataset" : "LEVIR-CD",
-  "sampleId" : "test_100_y0000_x0256",
+  "sampleId" : "test_0001_x0256_y0256",
   "classicalBaseline" : {
-    "sampleId" : "test_100_y0000_x0256",
+    "sampleId" : "test_0001_x0256_y0256",
     "status" : "POSSIBLE_ENCROACHMENT",
     "confidence" : 0.98,
     "totalChangedPixels" : 52295,
@@ -25,7 +25,7 @@
       "classification" : "POSSIBLE_ENCROACHMENT"
     } ],
     "metrics" : {
-      "sampleId" : "test_100_y0000_x0256",
+      "sampleId" : "test_0001_x0256_y0256",
       "truePositives" : 861,
       "trueNegatives" : 12971,
       "falsePositives" : 51434,
@@ -40,12 +40,12 @@
       "predictedChangedPixels" : 52295,
       "areaErrorPixels" : 51164,
       "areaErrorPercentage" : 78.070068359375,
-      "runtimeMs" : 69
+      "runtimeMs" : 82
     },
     "disclaimer" : "Automated screening result based on bi-temporal satellite raster processing. Not a legal or final land-ownership determination. Field survey verification required."
   },
   "deepLearningModel" : {
-    "sampleId" : "test_100_y0000_x0256",
+    "sampleId" : "test_0001_x0256_y0256",
     "status" : "POSSIBLE_ENCROACHMENT",
     "confidence" : 0.98,
     "totalChangedPixels" : 7814,
@@ -81,7 +81,7 @@
       "classification" : "POSSIBLE_ENCROACHMENT"
     } ],
     "metrics" : {
-      "sampleId" : "test_100_y0000_x0256",
+      "sampleId" : "test_0001_x0256_y0256",
       "truePositives" : 996,
       "trueNegatives" : 57587,
       "falsePositives" : 6818,
@@ -96,24 +96,24 @@
       "predictedChangedPixels" : 7814,
       "areaErrorPixels" : 6683,
       "areaErrorPercentage" : 10.19744873046875,
-      "runtimeMs" : 109
+      "runtimeMs" : 125
     },
     "disclaimer" : "Automated screening result based on bi-temporal satellite raster processing. Not a legal or final land-ownership determination. Field survey verification required."
   },
   "batchComparison" : [ {
     "method" : "Classical Baseline (Pixel Difference)",
-    "precision" : 0.013684932054939718,
-    "recall" : 0.46748301491995603,
-    "f1" : 0.024288719796865144,
-    "iou" : 0.01257279350655128,
-    "runtimeMs" : 146
+    "precision" : 0.01646428912894834,
+    "recall" : 0.7612732094817618,
+    "f1" : 0.03223149362823561,
+    "iou" : 0.01637972034620683,
+    "runtimeMs" : 102
   }, {
     "method" : "Deep Learning (Siamese ResNet-18)",
-    "precision" : 0.028903014412390318,
-    "recall" : 0.3134394340788264,
-    "f1" : 0.0517608759887716,
-    "iou" : 0.028542223198716826,
-    "runtimeMs" : 788
+    "precision" : 0.12746352700118424,
+    "recall" : 0.8806366046966723,
+    "f1" : 0.22269422049816234,
+    "iou" : 0.1252987797191433,
+    "runtimeMs" : 236
   } ],
   "notice" : "Automated screening result based on bi-temporal satellite raster processing. Not a legal or final land-ownership determination. Field survey verification required."
 }

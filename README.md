@@ -126,8 +126,9 @@ Here is a summary of the components implemented, verified, and benchmarked:
 ## 5. Technology Stack
 
 - **Language:** Java 21+ LTS (Tested on Oracle JDK 25)
-- **Build System:** Apache Maven 3.9.6 (with portable wrapper `mvnw.cmd` / `mvnw`)
+- **Build System:** Apache Maven 3.9.6 / 3.9.9 (with portable wrapper `mvnw.cmd` / `mvnw`)
 - **Deep Learning Runtime:** ONNX Runtime Java 1.17.1 (CPU inference, OpenMP)
+- **Web Dashboard:** Python 3.10+ & Streamlit 1.30+ (`dashboard/app.py`)
 - **Mathematical Tools:** Apache Commons Math 3.6.1
 - **Testing:** JUnit 5 (30/30 unit tests passing)
 - **Image Processing:** Pure Java Standard Library (`javax.imageio.ImageIO`, `java.awt.image.BufferedImage`)
@@ -146,7 +147,14 @@ Here is a summary of the components implemented, verified, and benchmarked:
 .\mvnw.cmd package
 ```
 
-### 3. Run One-Click Demonstration
+### 3. Launch Graphical Web Dashboard (Streamlit)
+```powershell
+pip install -r dashboard/requirements.txt
+streamlit run dashboard/app.py
+```
+Open `http://localhost:8501` to use the interactive dashboard: select or upload satellite image tiles, adjust thresholds/Otsu, inspect before/after side-by-side, view predicted change masks and bounding boxes, and explore model benchmarks.
+
+### 4. Run One-Click Demonstration (CLI)
 ```powershell
 java -jar target/satellite-detector.jar --demo
 ```
@@ -156,30 +164,38 @@ This single command runs the entire pipeline on LEVIR-CD test imagery, generates
 - `results/baseline_change_mask.png` (classical pixel difference mask)
 - `results/dl_predicted_mask.png` (Siamese ResNet-18 predicted mask)
 - `results/highlighted_changes.png` (bounding boxes overlaid on after image)
-- `results/comparison_image.png` (4-panel diagnostic board)
+- `results/comparison_image.png` (5-panel diagnostic board)
+- `results/confusion_matrix.png` (pixel-level 2x2 confusion matrix heatmap)
 - `results/metrics.csv` & `results/model_comparison.csv` (empirical metrics)
 - `results/model_comparison_chart.png` (visual benchmark chart)
 - `results/result.json` (machine-readable detection summary)
 
-### 4. Run Educational Sub-Modules
+### 5. Run Educational & Validation Sub-Modules
 ```powershell
 # Run course fundamentals (Tensors, SVD, Gradient Checker, Neurons, MLP):
 java -jar target/satellite-detector.jar --fundamentals
 
-# Run optimizer comparison benchmark:
+# Run optimizer comparison benchmark and generate convergence plot:
 java -jar target/satellite-detector.jar --optimizers
 
-# Run activation function evaluation:
-java -jar target/satellite-detector.jar --activations
+# Run hyperparameter ablations & overfitting vs generalization study:
+java -jar target/satellite-detector.jar --ablations
 
-# Run educational learning rules:
-java -jar target/satellite-detector.jar --learning-rules
+# Run 2D & 3D convolution spatial filtering demo & feature maps:
+java -jar target/satellite-detector.jar --convolution
 
-# Run temporal land-use trend simulation:
+# Run temporal land-use sequence modeling (LSTM cell + Transformer self-attention):
 java -jar target/satellite-detector.jar --temporal
 
-# Run generative augmentation simulation:
+# Run generative VAE reparameterization, GAN minimax training & latent visualization:
 java -jar target/satellite-detector.jar --generative
+
+# Run environmental perturbations stress test & systematic error analysis:
+java -jar target/satellite-detector.jar --robustness
+
+# Run single-pair detection with Otsu adaptive thresholding:
+java -jar target/satellite-detector.jar --detect-change \
+  --before results/before.png --after results/after.png --label results/ground_truth.png --otsu
 ```
 
 ---
@@ -191,31 +207,37 @@ Satellite_Land_Use_Change_Encroachment_Detector/
 ├── pom.xml                                      # Maven configuration (Java 21+, ONNX Runtime 1.17.1)
 ├── mvnw.cmd / mvnw                              # Maven wrapper scripts
 ├── README.md                                    # This project guide
+├── dashboard/
+│   ├── app.py                                   # Streamlit graphical web application
+│   ├── requirements.txt                         # Dashboard python dependencies
+│   └── samples/                                 # Sample benchmark satellite image tiles
 ├── docs/
-│   ├── VIVA_CODE_MAP.md                         # 14-file code guide for technical viva
+│   ├── user-guide.md                            # Comprehensive build, test, and execution guide
+│   ├── VIVA_CODE_MAP.md                         # 18-file code guide for technical viva
 │   ├── PROJECT_FLOW.md                          # Plain English 8-stage pipeline breakdown
 │   ├── technical-report.md                      # Academic report with formulas & benchmark data
 │   ├── deployment-plan.md                       # Operational deployment & hardware guide
 │   ├── model-card.md                            # Model card for Siamese ResNet-18
 │   ├── dataset-card.md                          # Dataset provenance & limitations (LEVIR-CD)
-│   └── DETECTION_MODELS_COMPARISON.md           # R-CNN/YOLO/RetinaNet conceptual comparison
+│   └── DETECTION_MODELS_COMPARISON.md           # R-CNN/YOLO/RetinaNet/GoogLeNet comparison
 ├── data/
 │   └── processed/LEVIR-CD/test/                 # Real LEVIR-CD test tiles (A, B, label)
 ├── models/
 │   └── onnx/resnet18_change_detector.onnx       # Pretrained Siamese ResNet-18 ONNX model (44.7 MB)
-├── experiments/                                 # Optimizer and activation CSV logs
+├── experiments/                                 # Optimizer, ablation, and robustness experiment logs
 ├── results/                                     # Output change masks, comparison charts, CSVs, JSON
 └── src/
     ├── main/java/com/satellite/
     │   ├── app/Main.java                        # Application entry point & CLI routing
-    │   ├── change/                              # Classical baseline, difference, morphology, BFS
+    │   ├── change/                              # Classical baseline, difference, Otsu, morphology, BFS
     │   ├── classification/                      # OnnxResNetChangeDetector (ONNX Runtime Java)
-    │   ├── evaluation/                          # ModelComparisonRunner, IoU, F1, CSV export
-    │   ├── fundamentals/                        # SimpleTensor, SvdDemo, GradientChecker, Neurons, XOR MLP
-    │   ├── optimizers/                          # BGD, SGD, Momentum, Nesterov comparison
+    │   ├── evaluation/                          # ModelComparisonRunner, RobustnessAnalysis, metrics
+    │   ├── fundamentals/                        # SimpleTensor, SvdDemo, GradientChecker, ConvolutionDemo
+    │   ├── mlp/                                 # MultilayerPerceptron, AblationRunner, Activation, Loss
+    │   ├── optimizers/                          # BGD, SGD, Momentum, Nesterov comparison & loss curves
     │   ├── learning/                            # Hebbian, Oja's, WTA, Delta, Hopfield models
-    │   ├── temporal/                            # TemporalLandUseDemo (recurrent sequence model)
-    │   └── generative/                          # GenerativeAugmentationDemo (latent space demo)
+    │   ├── temporal/                            # TemporalLandUseDemo, LSTMCell, SimpleAttentionDemo
+    │   └── generative/                          # GenerativeAugmentationDemo (VAE + Minimax GAN)
     └── test/java/com/satellite/                 # JUnit 5 test suite (30 passing tests)
 ```
 

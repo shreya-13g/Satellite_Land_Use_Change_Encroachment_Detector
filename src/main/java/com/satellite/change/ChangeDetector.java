@@ -32,6 +32,7 @@ public class ChangeDetector {
     private final ConnectedComponentAnalyzer componentAnalyzer;
     private final EncroachmentDetector encroachmentDetector;
     private final ChangeVisualizer visualizer;
+    private boolean useOtsu = false;
 
     public ChangeDetector(double threshold, int minRegionArea, DifferenceCalculator.Mode diffMode) {
         this.diffCalculator = new DifferenceCalculator(diffMode);
@@ -40,6 +41,12 @@ public class ChangeDetector {
         this.componentAnalyzer = new ConnectedComponentAnalyzer(minRegionArea);
         this.encroachmentDetector = new EncroachmentDetector();
         this.visualizer = new ChangeVisualizer();
+        this.useOtsu = false;
+    }
+
+    public ChangeDetector(double threshold, int minRegionArea, boolean useOtsu) {
+        this(threshold, minRegionArea, DifferenceCalculator.Mode.EUCLIDEAN_RGB);
+        this.useOtsu = useOtsu;
     }
 
     public ChangeDetector(double threshold, int minRegionArea) {
@@ -48,6 +55,14 @@ public class ChangeDetector {
 
     public ChangeDetector() {
         this(ChangeMaskGenerator.DEFAULT_THRESHOLD, NoiseRemover.DEFAULT_MIN_REGION_AREA);
+    }
+
+    public boolean isUseOtsu() {
+        return useOtsu;
+    }
+
+    public void setUseOtsu(boolean useOtsu) {
+        this.useOtsu = useOtsu;
     }
 
     /**
@@ -59,8 +74,8 @@ public class ChangeDetector {
         // 1. Difference map
         float[][] diffMap = diffCalculator.calculateDifference(imgA, imgB);
 
-        // 2. Binary mask generation
-        byte[][] rawMask = maskGenerator.generateMask(diffMap);
+        // 2. Binary mask generation (static threshold or Otsu adaptive)
+        byte[][] rawMask = maskGenerator.generateMask(diffMap, useOtsu);
 
         // 3. Noise removal & morphological cleanup
         byte[][] cleanMask = noiseRemover.cleanMask(rawMask);
