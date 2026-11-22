@@ -120,6 +120,14 @@ public class MultilayerPerceptron {
     // Backward Pass (Backpropagation)
     // ------------------------------------------------------------------------
 
+    public double computeLoss(Tensor a2, Tensor yTrue) {
+        return lossFunction.compute(a2, yTrue);
+    }
+
+    public Gradients backward(ForwardCache cache, Tensor yTrue) {
+        return backward(cache, yTrue, 0.0);
+    }
+
     public Gradients backward(ForwardCache cache, Tensor yTrue, double l2Lambda) {
         int n = cache.x.getRows();
 

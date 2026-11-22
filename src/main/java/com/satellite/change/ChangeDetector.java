@@ -269,7 +269,7 @@ public class ChangeDetector {
         Files.writeString(reportPath, sb.toString());
     }
 
-    private byte[][] extractBinaryArray(BufferedImage mask) {
+    public static byte[][] extractBinaryArray(BufferedImage mask) {
         int w = mask.getWidth();
         int h = mask.getHeight();
         byte[][] arr = new byte[h][w];
@@ -309,6 +309,10 @@ public class ChangeDetector {
         }
 
         public byte[][] getGroundTruthArray() {
+            return groundTruthArray;
+        }
+
+        public byte[][] getGroundTruthMask() {
             return groundTruthArray;
         }
 

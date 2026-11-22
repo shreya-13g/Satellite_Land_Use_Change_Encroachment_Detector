@@ -35,6 +35,7 @@ public class HopfieldEnergyDemo {
         public double getEnergy() { return energy; }
         public boolean isStable() { return isStable; }
         public boolean isMatchesTarget() { return matchesTarget; }
+        public boolean matchesTarget() { return matchesTarget; }
     }
 
     public static class EnergyResult {

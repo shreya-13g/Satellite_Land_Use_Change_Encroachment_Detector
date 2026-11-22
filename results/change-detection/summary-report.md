@@ -7,24 +7,24 @@
 
 | Metric | Evaluated Value |
 |:---|:---:|
-| **Evaluated Samples** | 80 tiles |
-| **Mean IoU (Intersection over Union)** | **0.0790** |
-| **Mean F1-Score** | **0.1222** |
-| **Mean Precision** | **0.0901** |
-| **Mean Change Recall** | **0.2728** |
-| **Mean Changed-Area Error** | **19259.9 pixels** |
-| **Total Runtime** | **651 ms** |
+| **Evaluated Samples** | 6 tiles |
+| **Mean IoU (Intersection over Union)** | **0.0126** |
+| **Mean F1-Score** | **0.0243** |
+| **Mean Precision** | **0.0137** |
+| **Mean Change Recall** | **0.4675** |
+| **Mean Changed-Area Error** | **50080.8 pixels** |
+| **Total Runtime** | **160 ms** |
 
 ## 2. Global Confusion Matrix (Pixel Aggregation)
 
 | Classification | Ground Truth Change | Ground Truth Unchanged |
 |:---|:---:|:---:|
-| **Predicted Change** | TP: 186,614 | FP: 1,742,804 |
-| **Predicted Unchanged** | FN: 202,014 | TN: 3,111,448 |
+| **Predicted Change** | TP: 3,543 | FP: 305,958 |
+| **Predicted Unchanged** | FN: 5,473 | TN: 78,242 |
 
 ## 3. Encroachment Screening Breakdown
 
-- **Possible Encroachments:** 80
+- **Possible Encroachments:** 6
 - **Possible Changes:** 0
 - **No Significant Change:** 0
 

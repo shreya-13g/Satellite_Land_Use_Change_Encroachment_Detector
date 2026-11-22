@@ -1,27 +1,39 @@
 package com.satellite.app;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.satellite.change.ChangeDetector;
+import com.satellite.classification.OnnxResNetChangeDetector;
+import com.satellite.detection.EncroachmentDetector;
 import com.satellite.detection.EncroachmentResult;
 import com.satellite.evaluation.ChangeMetrics;
+import com.satellite.evaluation.ModelComparisonRunner;
+import com.satellite.fundamentals.ActivationComparison;
+import com.satellite.fundamentals.FundamentalsRunner;
+import com.satellite.generative.GenerativeAugmentationDemo;
+import com.satellite.learning.LearningRulesDemo;
+import com.satellite.optimizers.OptimizerComparison;
+import com.satellite.temporal.TemporalLandUseDemo;
+import com.satellite.visualization.ChangeVisualizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.InputStream;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
 /**
- * Entry point for the Satellite Land Use Change and Encroachment Detector.
- * <p>
+ * Satellite Land Use Change and Encroachment Detector
+ *
  * Geospatial Intelligence Domain:
  * Multitemporal optical satellite image analysis for detecting Land Use / Land Cover (LULC)
  * transitions and unauthorized human encroachment into environmentally protected zones.
- * </p>
  */
 public class Main {
 
@@ -31,7 +43,6 @@ public class Main {
     public static final String APP_VERSION = "1.0.0-SNAPSHOT";
 
     public static void main(String[] args) {
-        // Required exact output lines:
         System.out.println("Satellite Land Use Change and Encroachment Detector");
         System.out.println("Java Maven project initialized successfully.");
 
@@ -41,24 +52,19 @@ public class Main {
         logger.info("================================================================================");
 
         try {
-            // 1. Report Runtime Environment
             logRuntimeInfo();
-
-            // 2. Load Properties
             Properties props = loadProperties();
             logger.info("Loaded configuration: Environment={}, Default GSD={}m, TileSize={}",
                     props.getProperty("app.environment", "development"),
                     props.getProperty("geospatial.default.gsd.meters", "10.0"),
                     props.getProperty("geospatial.tile.size", "256"));
 
-            // 3. Verify Directory Infrastructure
             verifyProjectLayout();
 
-            // 4. Dispatch Command-Line Flags
             if (args != null && args.length > 0) {
                 handleCommandLine(args);
             } else {
-                logger.info("Stage 1 & 2 initialization verified. Use --demo or --detect-change for change detection.");
+                logger.info("Use --demo to execute benchmark comparison, or --help for available commands.");
             }
 
             logger.info("================================================================================");
@@ -73,9 +79,6 @@ public class Main {
         }
     }
 
-    /**
-     * Parses and dispatches CLI options.
-     */
     public static void handleCommandLine(String[] args) throws Exception {
         Map<String, String> params = parseArgs(args);
 
@@ -83,8 +86,22 @@ public class Main {
             runDemo(params);
         } else if (params.containsKey("--detect-change")) {
             runDetectChange(params);
+        } else if (params.containsKey("--fundamentals")) {
+            FundamentalsRunner.runAll();
+        } else if (params.containsKey("--optimizers")) {
+            OptimizerComparison.runComparison(Paths.get("experiments"));
+        } else if (params.containsKey("--activations")) {
+            ActivationComparison.exportCsv(Paths.get("experiments", "activation_comparison.csv"));
+        } else if (params.containsKey("--learning-rules")) {
+            LearningRulesDemo.runAll();
+        } else if (params.containsKey("--temporal")) {
+            TemporalLandUseDemo.main(new String[0]);
+        } else if (params.containsKey("--generative")) {
+            GenerativeAugmentationDemo.runEducationalDemo();
+        } else if (params.containsKey("--help")) {
+            printUsage();
         } else {
-            throw new IllegalArgumentException("Unknown command or flag. Supported: --demo, --detect-change");
+            throw new IllegalArgumentException("Unknown command. Supported: --demo, --detect-change, --fundamentals, --optimizers, --activations, --learning-rules, --temporal, --generative");
         }
     }
 
@@ -107,17 +124,17 @@ public class Main {
     }
 
     /**
-     * Executes the automatic demonstration using available processed test tiles.
+     * Executes the comprehensive automated demonstration:
+     * - Runs Classical Baseline
+     * - Runs Deep Learning Siamese ResNet-18
+     * - Evaluates on real LEVIR-CD test tiles
+     * - Exports all required artifacts and reports
      */
     public static void runDemo(Map<String, String> params) throws Exception {
-        System.out.println("\n[DEMO] Starting Automated Change Detection & Encroachment Screening Demo...");
-        logger.info("[DEMO] Starting Automated Change Detection & Encroachment Screening Demo...");
-
         Path baseTestA = Paths.get("data", "processed", "LEVIR-CD", "test", "A");
         Path baseTestB = Paths.get("data", "processed", "LEVIR-CD", "test", "B");
         Path baseTestLabel = Paths.get("data", "processed", "LEVIR-CD", "test", "label");
 
-        // Fallback to raw dataset test split if processed tiles are not present
         if (!Files.exists(baseTestA)) {
             baseTestA = Paths.get("data", "LEVIR-CD", "test", "A");
             baseTestB = Paths.get("data", "LEVIR-CD", "test", "B");
@@ -125,7 +142,7 @@ public class Main {
         }
 
         if (!Files.exists(baseTestA)) {
-            throw new IllegalStateException("Test dataset not found in data/processed/LEVIR-CD/test or data/LEVIR-CD/test");
+            throw new IllegalStateException("Test dataset not found in data/processed/LEVIR-CD/test");
         }
 
         List<Path> filesA = listSortedFiles(baseTestA);
@@ -138,40 +155,164 @@ public class Main {
             filesL.add(baseTestLabel.resolve(name));
         }
 
-        double threshold = parseDoubleOrDefault(params.get("--threshold"), 35.0);
-        int minArea = parseIntOrDefault(params.get("--min-region-area"), 30);
-        Path outputDir = Paths.get(params.getOrDefault("--output", "results/change-detection"));
-        Path vizDir = Paths.get("visualizations", "change-detection");
+        Path resultsDir = Paths.get("results");
+        Files.createDirectories(resultsDir);
+        Files.createDirectories(Paths.get("experiments"));
 
-        ChangeDetector detector = new ChangeDetector(threshold, minArea);
-        ChangeDetector.BatchEvaluationResult evalResult = detector.evaluateBatch(
-                filesA, filesB, filesL, outputDir, vizDir, 6
+        // Generate educational tables
+        ActivationComparison.exportCsv(Paths.get("experiments", "activation_comparison.csv"));
+        OptimizerComparison.runComparison(Paths.get("experiments"));
+
+        // Select representative sample tile (preferably one with ground truth changes)
+        int selectedIndex = 0;
+        for (int i = 0; i < filesL.size(); i++) {
+            if (filesA.get(i).getFileName().toString().contains("x0256")) {
+                selectedIndex = i;
+                break;
+            }
+        }
+
+        Path samplePathA = filesA.get(selectedIndex);
+        Path samplePathB = filesB.get(selectedIndex);
+        Path samplePathL = filesL.get(selectedIndex);
+        String sampleId = samplePathA.getFileName().toString().replaceFirst("\\.[^.]+$", "");
+
+        BufferedImage imgA = ImageIO.read(samplePathA.toFile());
+        BufferedImage imgB = ImageIO.read(samplePathB.toFile());
+        BufferedImage imgL = Files.exists(samplePathL) ? ImageIO.read(samplePathL.toFile()) : null;
+
+        // 1. Run Classical Baseline
+        ChangeDetector baselineDetector = new ChangeDetector(35.0, 30);
+        ChangeDetector.DetectionOutput baseOut = baselineDetector.processPair(imgA, imgB, imgL, sampleId);
+        EncroachmentResult baseRes = baseOut.getResult();
+        ChangeMetrics baseMetrics = baseRes.getMetrics();
+
+        // 2. Run Deep Learning Model (Siamese ResNet-18)
+        Path onnxPath = Paths.get("models", "onnx", "resnet18_change_detector.onnx");
+        ChangeDetector.DetectionOutput dlOut = null;
+        EncroachmentResult dlRes = null;
+        ChangeMetrics dlMetrics = null;
+
+        if (Files.exists(onnxPath)) {
+            try (OnnxResNetChangeDetector dlDetector = new OnnxResNetChangeDetector(onnxPath, 30)) {
+                dlOut = dlDetector.processPair(imgA, imgB, imgL, sampleId);
+                dlRes = dlOut.getResult();
+                dlMetrics = dlRes.getMetrics();
+            }
+        }
+
+        // 3. Run Batch Comparison across all available test tiles
+        List<ModelComparisonRunner.ModelBenchmarkResult> comparison = ModelComparisonRunner.compareModels(
+                filesA, filesB, filesL, resultsDir, filesA.size()
         );
 
-        System.out.println("================================================================================");
-        System.out.println("  STAGE 3: CHANGE DETECTION & ENCROACHMENT SCREENING BENCHMARK RESULTS");
-        System.out.println("================================================================================");
-        System.out.printf("  Samples Evaluated:       %d tiles%n", evalResult.getResults().size());
-        System.out.printf("  Mean IoU:                %.4f%n", evalResult.getMeanIou());
-        System.out.printf("  Mean F1-Score:           %.4f%n", evalResult.getMeanF1());
-        System.out.printf("  Mean Change Recall:      %.4f%n", evalResult.getMeanRecall());
-        System.out.printf("  Mean Precision:          %.4f%n", evalResult.getMeanPrecision());
-        System.out.printf("  Mean Area Error:         %.1f pixels%n", evalResult.getMeanAreaError());
-        System.out.printf("  Total Runtime:           %d ms%n", evalResult.getTotalRuntimeMs());
-        System.out.println("--------------------------------------------------------------------------------");
-        long countEncroachment = evalResult.getResults().stream().filter(r -> r.getStatus() == EncroachmentResult.Status.POSSIBLE_ENCROACHMENT).count();
-        long countChange = evalResult.getResults().stream().filter(r -> r.getStatus() == EncroachmentResult.Status.POSSIBLE_CHANGE).count();
-        long countNoChange = evalResult.getResults().stream().filter(r -> r.getStatus() == EncroachmentResult.Status.NO_SIGNIFICANT_CHANGE).count();
-        System.out.printf("  Screening Breakdown:     Encroachments: %d | Changes: %d | No Change: %d%n",
-                countEncroachment, countChange, countNoChange);
-        System.out.printf("  Outputs Generated:       %s%n", outputDir.toAbsolutePath());
-        System.out.printf("  Visualizations Saved:    %s%n", vizDir.toAbsolutePath());
-        System.out.println("================================================================================");
+        // 4. Save required individual files in results/
+        ChangeVisualizer visualizer = new ChangeVisualizer();
+
+        // Before, After, Ground Truth
+        ImageIO.write(imgA, "PNG", resultsDir.resolve("before.png").toFile());
+        ImageIO.write(imgB, "PNG", resultsDir.resolve("after.png").toFile());
+        if (imgL != null) {
+            ImageIO.write(imgL, "PNG", resultsDir.resolve("ground_truth.png").toFile());
+        }
+
+        // Baseline change mask
+        BufferedImage baseMaskImg = visualizer.createMaskImage(baseOut.getCleanMask());
+        ImageIO.write(baseMaskImg, "PNG", resultsDir.resolve("baseline_change_mask.png").toFile());
+
+        // DL prediction mask
+        BufferedImage dlMaskImg = null;
+        if (dlOut != null) {
+            dlMaskImg = visualizer.createMaskImage(dlOut.getCleanMask());
+            ImageIO.write(dlMaskImg, "PNG", resultsDir.resolve("dl_predicted_mask.png").toFile());
+        }
+
+        // Highlighted changes (bounding boxes on after image)
+        BufferedImage activeMask = (dlMaskImg != null) ? dlMaskImg : baseMaskImg;
+        List<com.satellite.change.ChangeRegion> activeRegions = (dlRes != null) ? dlRes.getRegions() : baseRes.getRegions();
+        EncroachmentResult.Status activeStatus = (dlRes != null) ? dlRes.getStatus() : baseRes.getStatus();
+
+        BufferedImage highlighted = visualizer.renderBoundingBoxes(imgB, activeRegions, activeStatus);
+        ImageIO.write(highlighted, "PNG", resultsDir.resolve("highlighted_changes.png").toFile());
+
+        // Comparison diagnostic board
+        BufferedImage gtDisplay = (imgL != null) ? imgL : activeMask;
+        EncroachmentResult alertRes = (dlRes != null) ? dlRes : baseRes;
+        BufferedImage compBoard = visualizer.renderSideBySideBoard(
+                imgA, imgB, gtDisplay, activeMask, highlighted, alertRes
+        );
+        ImageIO.write(compBoard, "PNG", resultsDir.resolve("comparison_image.png").toFile());
+
+        // metrics.csv (Detailed sample metrics)
+        Path metricsCsv = resultsDir.resolve("metrics.csv");
+        try (BufferedWriter bw = Files.newBufferedWriter(metricsCsv)) {
+            bw.write("Method,SampleId,IoU,F1Score,Precision,Recall,ChangedPixels,GroundTruthPixels,AreaErrorPixels,RuntimeMs\n");
+            if (baseMetrics != null) {
+                bw.write(String.format("Classical Baseline,%s,%.4f,%.4f,%.4f,%.4f,%d,%d,%d,%d\n",
+                        sampleId, baseMetrics.getIou(), baseMetrics.getF1Score(),
+                        baseMetrics.getPrecision(), baseMetrics.getRecall(),
+                        baseMetrics.getPredictedChangedPixels(), baseMetrics.getGroundTruthChangedPixels(),
+                        baseMetrics.getAreaErrorPixels(), baseMetrics.getRuntimeMs()));
+            }
+            if (dlMetrics != null) {
+                bw.write(String.format("Deep Learning (Siamese ResNet-18),%s,%.4f,%.4f,%.4f,%.4f,%d,%d,%d,%d\n",
+                        sampleId, dlMetrics.getIou(), dlMetrics.getF1Score(),
+                        dlMetrics.getPrecision(), dlMetrics.getRecall(),
+                        dlMetrics.getPredictedChangedPixels(), dlMetrics.getGroundTruthChangedPixels(),
+                        dlMetrics.getAreaErrorPixels(), dlMetrics.getRuntimeMs()));
+            }
+        }
+
+        // result.json (Structured results JSON)
+        ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        Map<String, Object> jsonMap = new LinkedHashMap<>();
+        jsonMap.put("dataset", "LEVIR-CD");
+        jsonMap.put("sampleId", sampleId);
+        jsonMap.put("classicalBaseline", baseRes);
+        if (dlRes != null) {
+            jsonMap.put("deepLearningModel", dlRes);
+        }
+        jsonMap.put("batchComparison", comparison);
+        jsonMap.put("notice", baseRes.getDisclaimer());
+        mapper.writeValue(resultsDir.resolve("result.json").toFile(), jsonMap);
+
+        // Concise Console Output as specified in Part 15
+        System.out.println();
+        System.out.println("Satellite Land Use Change and Encroachment Detector");
+        System.out.println();
+        System.out.println("Dataset: LEVIR-CD");
+        System.out.println("Input: Before + After satellite image (" + sampleId + ")");
+        System.out.println();
+        System.out.println("Classical Baseline:");
+        System.out.printf("Changed Area: %d pixels (%.2f%%)%n", baseRes.getTotalChangedPixels(), baseRes.getChangePercentage());
+        if (baseMetrics != null) {
+            System.out.printf("IoU: %.4f%n", baseMetrics.getIou());
+            System.out.printf("F1: %.4f%n", baseMetrics.getF1Score());
+            System.out.printf("Runtime: %d ms%n", baseMetrics.getRuntimeMs());
+        }
+        System.out.println();
+        System.out.println("Deep-Learning Model:");
+        System.out.println("Model: Siamese Pretrained ResNet-18 (ONNX Runtime)");
+        if (dlMetrics != null) {
+            System.out.printf("Changed Area: %d pixels (%.2f%%)%n", dlRes.getTotalChangedPixels(), dlRes.getChangePercentage());
+            System.out.printf("IoU: %.4f%n", dlMetrics.getIou());
+            System.out.printf("F1: %.4f%n", dlMetrics.getF1Score());
+            System.out.printf("Runtime: %d ms%n", dlMetrics.getRuntimeMs());
+        } else {
+            System.out.println("Status: ONNX model inference not available");
+        }
+        System.out.println();
+        System.out.println("Potential Encroachment:");
+        System.out.printf("Screening Status: %s%n", alertRes.getStatus());
+        System.out.printf("Confidence: %.1f%%%n", alertRes.getConfidence() * 100.0);
+        System.out.printf("Detected Clusters: %d%n", alertRes.getRegionCount());
+        System.out.println("Notice: " + alertRes.getDisclaimer());
+        System.out.println();
+        System.out.println("Outputs saved to:");
+        System.out.println(resultsDir.toAbsolutePath());
+        System.out.println();
     }
 
-    /**
-     * Executes single-pair change detection via CLI arguments.
-     */
     public static void runDetectChange(Map<String, String> params) throws Exception {
         String beforeStr = params.get("--before");
         String afterStr = params.get("--after");
@@ -229,45 +370,51 @@ public class Main {
 
     private static List<Path> listSortedFiles(Path dir) throws Exception {
         List<Path> list = new ArrayList<>();
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.png")) {
-            for (Path p : stream) list.add(p);
+        try (var stream = Files.list(dir)) {
+            stream.filter(p -> {
+                String n = p.getFileName().toString().toLowerCase();
+                return n.endsWith(".png") || n.endsWith(".jpg") || n.endsWith(".tif") || n.endsWith(".jpeg");
+            }).forEach(list::add);
         }
         list.sort(Comparator.comparing(Path::getFileName));
         return list;
     }
 
-    private static double parseDoubleOrDefault(String str, double def) {
-        if (str == null) return def;
-        try {
-            return Double.parseDouble(str);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid floating-point number: " + str);
-        }
+    private static double parseDoubleOrDefault(String val, double def) {
+        if (val == null) return def;
+        try { return Double.parseDouble(val); } catch (Exception e) { return def; }
     }
 
-    private static int parseIntOrDefault(String str, int def) {
-        if (str == null) return def;
-        try {
-            return Integer.parseInt(str);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid integer number: " + str);
-        }
+    private static int parseIntOrDefault(String val, int def) {
+        if (val == null) return def;
+        try { return Integer.parseInt(val); } catch (Exception e) { return def; }
     }
 
-    private static String stripExtension(String name) {
-        int idx = name.lastIndexOf('.');
-        return idx > 0 ? name.substring(0, idx) : name;
+    private static String stripExtension(String fn) {
+        int dot = fn.lastIndexOf('.');
+        return dot > 0 ? fn.substring(0, dot) : fn;
     }
 
     private static void printUsage() {
-        System.out.println("Usage:");
-        System.out.println("  java -jar target/satellite-detector.jar --demo");
-        System.out.println("  java -jar target/satellite-detector.jar --detect-change --before <A.png> --after <B.png> [--label <label.png>] [--output <dir>] [--threshold <35>] [--min-region-area <30>]");
+        System.out.println("\nUsage: java -jar target/satellite-detector.jar [OPTIONS]");
+        System.out.println("Options:");
+        System.out.println("  --demo                        Execute automated demonstration (LEVIR-CD)");
+        System.out.println("  --detect-change               Execute single-pair change detection");
+        System.out.println("    --before <path>             Path to pre-period optical satellite image");
+        System.out.println("    --after <path>              Path to post-period optical satellite image");
+        System.out.println("    --label <path>              (Optional) Path to ground-truth change mask");
+        System.out.println("    --threshold <double>        Radiometric change threshold (default: 35.0)");
+        System.out.println("    --min-region-area <int>     Minimum cluster size in pixels (default: 30)");
+        System.out.println("    --output <path>             Directory to store results");
+        System.out.println("  --fundamentals                Run Course Neural-Network fundamentals demo");
+        System.out.println("  --optimizers                  Run 4-optimizer benchmark comparison");
+        System.out.println("  --activations                 Export activation function comparison CSV");
+        System.out.println("  --learning-rules              Run 5 educational learning rules demo");
+        System.out.println("  --temporal                    Run temporal multi-year land change sequence demo");
+        System.out.println("  --generative                  Run generative VAE/GAN augmentation demo");
+        System.out.println("  --help                        Display this usage guide\n");
     }
 
-    /**
-     * Inspects and logs JVM and host execution parameters.
-     */
     public static void logRuntimeInfo() {
         Runtime rt = Runtime.getRuntime();
         long maxMemoryMB = rt.maxMemory() / (1024 * 1024);
@@ -286,9 +433,6 @@ public class Main {
                 availableProcessors, maxMemoryMB, totalMemoryMB);
     }
 
-    /**
-     * Loads the core application properties from classpath.
-     */
     public static Properties loadProperties() {
         Properties properties = new Properties();
         try (InputStream in = Main.class.getClassLoader().getResourceAsStream("application.properties")) {
@@ -303,9 +447,6 @@ public class Main {
         return properties;
     }
 
-    /**
-     * Verifies that the required project root folders exist.
-     */
     public static boolean verifyProjectLayout() {
         String[] requiredFolders = {
                 "configs", "data", "models", "experiments", "visualizations", "docs"
@@ -313,6 +454,11 @@ public class Main {
         boolean allValid = true;
         for (String folder : requiredFolders) {
             Path p = Paths.get(folder);
+            if (!Files.exists(p)) {
+                try {
+                    Files.createDirectories(p);
+                } catch (Exception ignored) {}
+            }
             if (Files.exists(p) && Files.isDirectory(p)) {
                 logger.debug("Project directory verified: {} [OK]", folder);
             } else {

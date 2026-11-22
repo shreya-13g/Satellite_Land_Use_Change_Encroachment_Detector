@@ -1,0 +1,3 @@
+Method,Precision,Recall,F1,IoU,RuntimeMs
+Classical Baseline (Pixel Difference),0.0137,0.4675,0.0243,0.0126,146
+Deep Learning (Siamese ResNet-18),0.0289,0.3134,0.0518,0.0285,788

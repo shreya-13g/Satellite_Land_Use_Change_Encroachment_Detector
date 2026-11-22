@@ -1,0 +1,5 @@
+Optimizer,FinalLoss
+Batch Gradient Descent (BGD),0.124875
+Stochastic Gradient Descent (SGD),0.124960
+Momentum (beta=0.85),0.000575
+Nesterov Momentum (beta=0.85),0.000659

@@ -18,6 +18,23 @@ public class ChangeVisualizer {
     private static final Font LABEL_FONT = new Font("SansSerif", Font.BOLD, 11);
 
     /**
+     * Converts a binary mask array to a displayable black-and-white BufferedImage.
+     */
+    public BufferedImage createMaskImage(byte[][] mask) {
+        int height = mask.length;
+        int width = mask[0].length;
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int val = (mask[y][x] == 1) ? 255 : 0;
+                int rgb = (val << 16) | (val << 8) | val;
+                img.setRGB(x, y, rgb);
+            }
+        }
+        return img;
+    }
+
+    /**
      * Draws bounding boxes, IDs, and centroid crosshairs around detected change regions on top of base image.
      */
     public BufferedImage renderBoundingBoxes(BufferedImage baseImage, List<ChangeRegion> regions, EncroachmentResult.Status status) {

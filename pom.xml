@@ -63,6 +63,13 @@
             <version>${jackson.version}</version>
         </dependency>
 
+        <!-- ONNX Runtime for Deep Learning CPU Inference -->
+        <dependency>
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime</artifactId>
+            <version>1.17.1</version>
+        </dependency>
+
         <!-- Testing: JUnit 5 Jupiter API and Engine -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -1,0 +1,85 @@
+Optimizer,Epoch,Loss
+Batch Gradient Descent (BGD),1,0.145545
+Batch Gradient Descent (BGD),50,0.125125
+Batch Gradient Descent (BGD),100,0.125103
+Batch Gradient Descent (BGD),150,0.125084
+Batch Gradient Descent (BGD),200,0.125068
+Batch Gradient Descent (BGD),250,0.125054
+Batch Gradient Descent (BGD),300,0.125041
+Batch Gradient Descent (BGD),350,0.125030
+Batch Gradient Descent (BGD),400,0.125019
+Batch Gradient Descent (BGD),450,0.125009
+Batch Gradient Descent (BGD),500,0.124999
+Batch Gradient Descent (BGD),550,0.124989
+Batch Gradient Descent (BGD),600,0.124979
+Batch Gradient Descent (BGD),650,0.124969
+Batch Gradient Descent (BGD),700,0.124958
+Batch Gradient Descent (BGD),750,0.124947
+Batch Gradient Descent (BGD),800,0.124935
+Batch Gradient Descent (BGD),850,0.124923
+Batch Gradient Descent (BGD),900,0.124908
+Batch Gradient Descent (BGD),950,0.124893
+Batch Gradient Descent (BGD),1000,0.124875
+Stochastic Gradient Descent (SGD),1,0.145545
+Stochastic Gradient Descent (SGD),50,0.125125
+Stochastic Gradient Descent (SGD),100,0.125105
+Stochastic Gradient Descent (SGD),150,0.125088
+Stochastic Gradient Descent (SGD),200,0.125074
+Stochastic Gradient Descent (SGD),250,0.125061
+Stochastic Gradient Descent (SGD),300,0.125051
+Stochastic Gradient Descent (SGD),350,0.125041
+Stochastic Gradient Descent (SGD),400,0.125033
+Stochastic Gradient Descent (SGD),450,0.125025
+Stochastic Gradient Descent (SGD),500,0.125018
+Stochastic Gradient Descent (SGD),550,0.125011
+Stochastic Gradient Descent (SGD),600,0.125005
+Stochastic Gradient Descent (SGD),650,0.124999
+Stochastic Gradient Descent (SGD),700,0.124993
+Stochastic Gradient Descent (SGD),750,0.124987
+Stochastic Gradient Descent (SGD),800,0.124981
+Stochastic Gradient Descent (SGD),850,0.124976
+Stochastic Gradient Descent (SGD),900,0.124970
+Stochastic Gradient Descent (SGD),950,0.124965
+Stochastic Gradient Descent (SGD),1000,0.124960
+Momentum (beta=0.85),1,0.145545
+Momentum (beta=0.85),50,0.125048
+Momentum (beta=0.85),100,0.124981
+Momentum (beta=0.85),150,0.124918
+Momentum (beta=0.85),200,0.124815
+Momentum (beta=0.85),250,0.124555
+Momentum (beta=0.85),300,0.123554
+Momentum (beta=0.85),350,0.116957
+Momentum (beta=0.85),400,0.068677
+Momentum (beta=0.85),450,0.013661
+Momentum (beta=0.85),500,0.005305
+Momentum (beta=0.85),550,0.003111
+Momentum (beta=0.85),600,0.002157
+Momentum (beta=0.85),650,0.001634
+Momentum (beta=0.85),700,0.001308
+Momentum (beta=0.85),750,0.001086
+Momentum (beta=0.85),800,0.000926
+Momentum (beta=0.85),850,0.000806
+Momentum (beta=0.85),900,0.000712
+Momentum (beta=0.85),950,0.000637
+Momentum (beta=0.85),1000,0.000576
+Nesterov Momentum (beta=0.85),1,0.145545
+Nesterov Momentum (beta=0.85),50,0.125045
+Nesterov Momentum (beta=0.85),100,0.124980
+Nesterov Momentum (beta=0.85),150,0.124914
+Nesterov Momentum (beta=0.85),200,0.124800
+Nesterov Momentum (beta=0.85),250,0.124497
+Nesterov Momentum (beta=0.85),300,0.123203
+Nesterov Momentum (beta=0.85),350,0.114022
+Nesterov Momentum (beta=0.85),400,0.057151
+Nesterov Momentum (beta=0.85),450,0.012855
+Nesterov Momentum (beta=0.85),500,0.005581
+Nesterov Momentum (beta=0.85),550,0.003394
+Nesterov Momentum (beta=0.85),600,0.002393
+Nesterov Momentum (beta=0.85),650,0.001831
+Nesterov Momentum (beta=0.85),700,0.001475
+Nesterov Momentum (beta=0.85),750,0.001230
+Nesterov Momentum (beta=0.85),800,0.001053
+Nesterov Momentum (beta=0.85),850,0.000918
+Nesterov Momentum (beta=0.85),900,0.000813
+Nesterov Momentum (beta=0.85),950,0.000729
+Nesterov Momentum (beta=0.85),1000,0.000660
