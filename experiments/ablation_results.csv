@@ -1,0 +1,21 @@
+category,configuration,final_loss,final_accuracy,epochs
+LearningRate,lr=0.05,0.124771,0.5000,1500
+LearningRate,lr=0.1,0.124580,0.5000,1500
+LearningRate,lr=0.5,0.113005,0.7500,1500
+LearningRate,lr=1.0,0.036088,1.0000,1500
+LearningRate,lr=2.0,0.002365,1.0000,1500
+Initialization,ZERO,0.125000,0.5000,1500
+Initialization,RANDOM_NORMAL,0.125000,0.5000,1500
+Initialization,XAVIER,0.036088,1.0000,1500
+Initialization,HE,0.007849,1.0000,1500
+Normalization,WithNormalization [0,1],0.036088,1.0000,1500
+Normalization,WithoutNormalization [0,255],0.083478,0.7500,1500
+Regularization,L2_lambda=0.0,0.036088,1.0000,1500
+Regularization,L2_lambda=0.01,0.125000,0.5000,1500
+Activation,SIGMOID,0.000403,1.0000,1500
+Activation,TANH,0.000095,1.0000,1500
+Activation,RELU,0.000081,1.0000,1500
+Optimizer,Batch Gradient Descent (BGD),0.121658,0.7500,1000
+Optimizer,Stochastic Gradient Descent (SGD),0.123626,0.5000,1000
+Optimizer,Momentum (beta=0.9),0.000776,1.0000,1000
+Optimizer,Nesterov Momentum (beta=0.9),0.000796,1.0000,1000

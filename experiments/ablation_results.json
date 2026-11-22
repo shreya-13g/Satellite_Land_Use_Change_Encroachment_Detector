@@ -1,0 +1,121 @@
+[ {
+  "category" : "LearningRate",
+  "configuration" : "lr=0.05",
+  "finalLoss" : 0.12477123264320905,
+  "finalAccuracy" : 0.5,
+  "epochs" : 1500
+}, {
+  "category" : "LearningRate",
+  "configuration" : "lr=0.1",
+  "finalLoss" : 0.1245795872129079,
+  "finalAccuracy" : 0.5,
+  "epochs" : 1500
+}, {
+  "category" : "LearningRate",
+  "configuration" : "lr=0.5",
+  "finalLoss" : 0.11300492920344285,
+  "finalAccuracy" : 0.75,
+  "epochs" : 1500
+}, {
+  "category" : "LearningRate",
+  "configuration" : "lr=1.0",
+  "finalLoss" : 0.03608751973036588,
+  "finalAccuracy" : 1.0,
+  "epochs" : 1500
+}, {
+  "category" : "LearningRate",
+  "configuration" : "lr=2.0",
+  "finalLoss" : 0.0023654180328142827,
+  "finalAccuracy" : 1.0,
+  "epochs" : 1500
+}, {
+  "category" : "Initialization",
+  "configuration" : "ZERO",
+  "finalLoss" : 0.125,
+  "finalAccuracy" : 0.5,
+  "epochs" : 1500
+}, {
+  "category" : "Initialization",
+  "configuration" : "RANDOM_NORMAL",
+  "finalLoss" : 0.12499954992159332,
+  "finalAccuracy" : 0.5,
+  "epochs" : 1500
+}, {
+  "category" : "Initialization",
+  "configuration" : "XAVIER",
+  "finalLoss" : 0.03608751973036588,
+  "finalAccuracy" : 1.0,
+  "epochs" : 1500
+}, {
+  "category" : "Initialization",
+  "configuration" : "HE",
+  "finalLoss" : 0.007848594120079438,
+  "finalAccuracy" : 1.0,
+  "epochs" : 1500
+}, {
+  "category" : "Normalization",
+  "configuration" : "WithNormalization [0,1]",
+  "finalLoss" : 0.03608751973036588,
+  "finalAccuracy" : 1.0,
+  "epochs" : 1500
+}, {
+  "category" : "Normalization",
+  "configuration" : "WithoutNormalization [0,255]",
+  "finalLoss" : 0.08347802039960142,
+  "finalAccuracy" : 0.75,
+  "epochs" : 1500
+}, {
+  "category" : "Regularization",
+  "configuration" : "L2_lambda=0.0",
+  "finalLoss" : 0.03608751973036588,
+  "finalAccuracy" : 1.0,
+  "epochs" : 1500
+}, {
+  "category" : "Regularization",
+  "configuration" : "L2_lambda=0.01",
+  "finalLoss" : 0.12500000001027553,
+  "finalAccuracy" : 0.5,
+  "epochs" : 1500
+}, {
+  "category" : "Activation",
+  "configuration" : "SIGMOID",
+  "finalLoss" : 4.0339901170554195E-4,
+  "finalAccuracy" : 1.0,
+  "epochs" : 1500
+}, {
+  "category" : "Activation",
+  "configuration" : "TANH",
+  "finalLoss" : 9.487381515062149E-5,
+  "finalAccuracy" : 1.0,
+  "epochs" : 1500
+}, {
+  "category" : "Activation",
+  "configuration" : "RELU",
+  "finalLoss" : 8.145723109291008E-5,
+  "finalAccuracy" : 1.0,
+  "epochs" : 1500
+}, {
+  "category" : "Optimizer",
+  "configuration" : "Batch Gradient Descent (BGD)",
+  "finalLoss" : 0.12165781225961866,
+  "finalAccuracy" : 0.75,
+  "epochs" : 1000
+}, {
+  "category" : "Optimizer",
+  "configuration" : "Stochastic Gradient Descent (SGD)",
+  "finalLoss" : 0.12362591616583127,
+  "finalAccuracy" : 0.5,
+  "epochs" : 1000
+}, {
+  "category" : "Optimizer",
+  "configuration" : "Momentum (beta=0.9)",
+  "finalLoss" : 7.755559087388778E-4,
+  "finalAccuracy" : 1.0,
+  "epochs" : 1000
+}, {
+  "category" : "Optimizer",
+  "configuration" : "Nesterov Momentum (beta=0.9)",
+  "finalLoss" : 7.962352743743354E-4,
+  "finalAccuracy" : 1.0,
+  "epochs" : 1000
+} ]

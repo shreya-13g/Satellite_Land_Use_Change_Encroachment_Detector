@@ -1,5 +1,6 @@
 package com.satellite.app;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.satellite.change.ChangeDetector;
@@ -8,10 +9,13 @@ import com.satellite.detection.EncroachmentDetector;
 import com.satellite.detection.EncroachmentResult;
 import com.satellite.evaluation.ChangeMetrics;
 import com.satellite.evaluation.ModelComparisonRunner;
+import com.satellite.evaluation.RobustnessAnalysis;
 import com.satellite.fundamentals.ActivationComparison;
+import com.satellite.fundamentals.ConvolutionDemo;
 import com.satellite.fundamentals.FundamentalsRunner;
 import com.satellite.generative.GenerativeAugmentationDemo;
 import com.satellite.learning.LearningRulesDemo;
+import com.satellite.mlp.AblationRunner;
 import com.satellite.optimizers.OptimizerComparison;
 import com.satellite.temporal.TemporalLandUseDemo;
 import com.satellite.visualization.ChangeVisualizer;
@@ -59,6 +63,7 @@ public class Main {
                     props.getProperty("geospatial.default.gsd.meters", "10.0"),
                     props.getProperty("geospatial.tile.size", "256"));
 
+            loadPipelineConfig();
             verifyProjectLayout();
 
             if (args != null && args.length > 0) {
@@ -98,10 +103,16 @@ public class Main {
             TemporalLandUseDemo.main(new String[0]);
         } else if (params.containsKey("--generative")) {
             GenerativeAugmentationDemo.runEducationalDemo();
+        } else if (params.containsKey("--ablations")) {
+            AblationRunner.runAllAblations();
+        } else if (params.containsKey("--convolution")) {
+            ConvolutionDemo.runDemo();
+        } else if (params.containsKey("--robustness")) {
+            RobustnessAnalysis.runDemo();
         } else if (params.containsKey("--help")) {
             printUsage();
         } else {
-            throw new IllegalArgumentException("Unknown command. Supported: --demo, --detect-change, --fundamentals, --optimizers, --activations, --learning-rules, --temporal, --generative");
+            throw new IllegalArgumentException("Unknown command. Supported: --demo, --detect-change, --fundamentals, --optimizers, --activations, --learning-rules, --temporal, --generative, --ablations, --convolution, --robustness");
         }
     }
 
@@ -318,6 +329,8 @@ public class Main {
         String afterStr = params.get("--after");
         String labelStr = params.get("--label");
         String outputDirStr = params.getOrDefault("--output", "results/change-detection");
+        String modelChoice = params.getOrDefault("--model", "both").toLowerCase();
+        boolean useOtsu = params.containsKey("--otsu") || Boolean.parseBoolean(params.getOrDefault("--use-otsu", "false"));
 
         if (beforeStr == null || afterStr == null) {
             throw new IllegalArgumentException("--detect-change requires both --before <path> and --after <path>");
@@ -327,6 +340,7 @@ public class Main {
         Path pathB = Paths.get(afterStr);
         Path pathL = (labelStr != null) ? Paths.get(labelStr) : null;
         Path outDir = Paths.get(outputDirStr);
+        Files.createDirectories(outDir);
 
         if (!Files.exists(pathA)) throw new IllegalArgumentException("Before image does not exist: " + pathA);
         if (!Files.exists(pathB)) throw new IllegalArgumentException("After image does not exist: " + pathB);
@@ -338,32 +352,68 @@ public class Main {
         BufferedImage imgA = ImageIO.read(pathA.toFile());
         BufferedImage imgB = ImageIO.read(pathB.toFile());
         BufferedImage imgL = (pathL != null) ? ImageIO.read(pathL.toFile()) : null;
-
-        ChangeDetector detector = new ChangeDetector(threshold, minArea);
         String sampleId = stripExtension(pathA.getFileName().toString());
 
-        ChangeDetector.DetectionOutput output = detector.processPair(imgA, imgB, imgL, sampleId);
-        detector.saveVisualizations(imgA, imgB, imgL, output, outDir);
-
-        EncroachmentResult res = output.getResult();
         System.out.println("================================================================================");
-        System.out.println("  CHANGE DETECTION & ENCROACHMENT RESULT: " + sampleId);
+        System.out.println("  CHANGE DETECTION & ENCROACHMENT SCREENING: " + sampleId);
+        System.out.printf("  Threshold Mode: %s | Min Region Area: %d px%n",
+                useOtsu ? "Otsu Adaptive" : String.format("Fixed (%.1f)", threshold), minArea);
         System.out.println("================================================================================");
-        System.out.printf("  Screening Status:        %s%n", res.getStatus());
-        System.out.printf("  Confidence:              %.1f%%%n", res.getConfidence() * 100.0);
-        System.out.printf("  Changed Area:            %d pixels (%.2f%% of image)%n", res.getTotalChangedPixels(), res.getChangePercentage());
-        System.out.printf("  Detected Clusters:       %d%n", res.getRegionCount());
-        System.out.printf("  Largest Cluster:         %d pixels%n", res.getLargestRegionPixels());
 
-        if (res.getMetrics() != null) {
-            ChangeMetrics m = res.getMetrics();
+        // 1. Classical Baseline
+        ChangeDetector baseline = new ChangeDetector(threshold, minArea, useOtsu);
+        ChangeDetector.DetectionOutput baseOut = baseline.processPair(imgA, imgB, imgL, sampleId);
+        baseline.saveVisualizations(imgA, imgB, imgL, baseOut, outDir);
+
+        EncroachmentResult baseRes = baseOut.getResult();
+        System.out.println("\n[1. Classical Baseline (Pixel Radiometric Difference)]");
+        System.out.printf("  Screening Status:        %s%n", baseRes.getStatus());
+        System.out.printf("  Confidence:              %.1f%%%n", baseRes.getConfidence() * 100.0);
+        System.out.printf("  Changed Area:            %d pixels (%.2f%% of image)%n", baseRes.getTotalChangedPixels(), baseRes.getChangePercentage());
+        System.out.printf("  Detected Clusters:       %d%n", baseRes.getRegionCount());
+        System.out.printf("  Largest Cluster:         %d pixels%n", baseRes.getLargestRegionPixels());
+
+        if (baseRes.getMetrics() != null) {
+            ChangeMetrics m = baseRes.getMetrics();
             System.out.printf("  IoU:                     %.4f%n", m.getIou());
             System.out.printf("  F1-Score:                %.4f%n", m.getF1Score());
             System.out.printf("  Precision:               %.4f%n", m.getPrecision());
             System.out.printf("  Recall (Change Recall):  %.4f%n", m.getRecall());
             System.out.printf("  Area Error:              %d pixels%n", m.getAreaErrorPixels());
         }
-        System.out.println("  Notice:                  " + res.getDisclaimer());
+
+        // 2. Deep Learning Model (Siamese ResNet-18)
+        Path onnxPath = Paths.get("models", "onnx", "resnet18_change_detector.onnx");
+        if ((modelChoice.equals("dl") || modelChoice.equals("both")) && Files.exists(onnxPath)) {
+            System.out.println("\n[2. Deep Learning (Siamese ResNet-18 Feature Difference)]");
+            try (OnnxResNetChangeDetector dl = new OnnxResNetChangeDetector(onnxPath, minArea)) {
+                ChangeDetector.DetectionOutput dlOut = dl.processPair(imgA, imgB, imgL, sampleId);
+                dl.saveVisualizations(imgA, imgB, imgL, dlOut, outDir.resolve("dl"));
+
+                // Save dl_predicted_mask in main output dir too
+                ChangeVisualizer viz = new ChangeVisualizer();
+                BufferedImage dlMask = viz.createMaskImage(dlOut.getCleanMask());
+                ImageIO.write(dlMask, "PNG", outDir.resolve(sampleId + "_dl_predicted_mask.png").toFile());
+
+                EncroachmentResult dlRes = dlOut.getResult();
+                System.out.printf("  Screening Status:        %s%n", dlRes.getStatus());
+                System.out.printf("  Confidence:              %.1f%%%n", dlRes.getConfidence() * 100.0);
+                System.out.printf("  Changed Area:            %d pixels (%.2f%% of image)%n", dlRes.getTotalChangedPixels(), dlRes.getChangePercentage());
+                System.out.printf("  Detected Clusters:       %d%n", dlRes.getRegionCount());
+                System.out.printf("  Largest Cluster:         %d pixels%n", dlRes.getLargestRegionPixels());
+
+                if (dlRes.getMetrics() != null) {
+                    ChangeMetrics dm = dlRes.getMetrics();
+                    System.out.printf("  IoU:                     %.4f%n", dm.getIou());
+                    System.out.printf("  F1-Score:                %.4f%n", dm.getF1Score());
+                    System.out.printf("  Precision:               %.4f%n", dm.getPrecision());
+                    System.out.printf("  Recall (Change Recall):  %.4f%n", dm.getRecall());
+                    System.out.printf("  Area Error:              %d pixels%n", dm.getAreaErrorPixels());
+                }
+            }
+        }
+
+        System.out.println("\n  Notice:                  " + baseRes.getDisclaimer());
         System.out.printf("  Visualizations Saved:    %s%n", outDir.toAbsolutePath());
         System.out.println("================================================================================");
     }
@@ -404,15 +454,41 @@ public class Main {
         System.out.println("    --after <path>              Path to post-period optical satellite image");
         System.out.println("    --label <path>              (Optional) Path to ground-truth change mask");
         System.out.println("    --threshold <double>        Radiometric change threshold (default: 35.0)");
+        System.out.println("    --otsu                      Enable Otsu adaptive thresholding");
         System.out.println("    --min-region-area <int>     Minimum cluster size in pixels (default: 30)");
+        System.out.println("    --model <baseline|dl|both>  Pipeline model to run (default: both)");
         System.out.println("    --output <path>             Directory to store results");
         System.out.println("  --fundamentals                Run Course Neural-Network fundamentals demo");
         System.out.println("  --optimizers                  Run 4-optimizer benchmark comparison");
         System.out.println("  --activations                 Export activation function comparison CSV");
         System.out.println("  --learning-rules              Run 5 educational learning rules demo");
-        System.out.println("  --temporal                    Run temporal multi-year land change sequence demo");
+        System.out.println("  --temporal                    Run temporal multi-year land change sequence demo (LSTM + Attention)");
         System.out.println("  --generative                  Run generative VAE/GAN augmentation demo");
+        System.out.println("  --ablations                   Run hyperparameter ablations & overfitting study");
+        System.out.println("  --convolution                 Run 2D/3D convolution feature map demo");
+        System.out.println("  --robustness                  Run noise, illumination & spatial robustness tests");
         System.out.println("  --help                        Display this usage guide\n");
+    }
+
+    public static void loadPipelineConfig() {
+        Path configPath = Paths.get("configs", "pipeline-config.json");
+        if (Files.exists(configPath)) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode root = mapper.readTree(configPath.toFile());
+                String crs = root.path("spatialReference").path("crs").asText("EPSG:32643");
+                double gsd = root.path("spatialReference").path("groundSamplingDistanceMeters").asDouble(10.0);
+                int tileW = root.path("tiling").path("tileWidth").asInt(256);
+                int lulcCount = root.path("lulcClasses").size();
+                double alertArea = root.path("encroachmentRules").path("minimumAlertAreaSqMeters").asDouble(500.0);
+                double confThreshold = root.path("encroachmentRules").path("confidenceThreshold").asDouble(0.75);
+
+                logger.info("Pipeline Config Active: CRS={}, GSD={}m, Tile={}x{}, LULC Classes={}, AlertMinArea={}m², ConfThreshold={}",
+                        crs, gsd, tileW, tileW, lulcCount, alertArea, confThreshold);
+            } catch (Exception e) {
+                logger.warn("Could not parse pipeline-config.json: {}", e.getMessage());
+            }
+        }
     }
 
     public static void logRuntimeInfo() {

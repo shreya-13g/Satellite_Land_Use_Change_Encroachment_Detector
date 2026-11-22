@@ -270,6 +270,7 @@ public class OnnxResNetChangeDetector implements AutoCloseable {
 
     public void saveVisualizations(BufferedImage imgA, BufferedImage imgB, BufferedImage gtMask,
                                    ChangeDetector.DetectionOutput output, Path outputDir) throws IOException {
+        Files.createDirectories(outputDir);
         EncroachmentResult res = output.getResult();
         String sampleId = res.getSampleId();
         byte[][] cleanMask = output.getCleanMask();

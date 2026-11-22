@@ -107,7 +107,112 @@ public class ModelComparisonRunner {
         // 4. Render visual comparison chart
         renderComparisonChart(comparison, resultsDir.resolve("model_comparison_chart.png"));
 
+        // 5. Render visual confusion matrix image (Req 10)
+        renderConfusionMatrixImage(
+                baseRes.getTotalTp(), baseRes.getTotalFp(),
+                baseRes.getTotalFn(), baseRes.getTotalTn(),
+                resultsDir.resolve("confusion_matrix.png")
+        );
+
         return comparison;
+    }
+
+    /**
+     * Renders a 2x2 pixel-level confusion matrix heatmap image (TP, FP, FN, TN).
+     */
+    public static void renderConfusionMatrixImage(long tp, long fp, long fn, long tn, Path outputPath) throws IOException {
+        int width = 520;
+        int height = 420;
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = img.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+        // Background
+        g.setColor(new Color(248, 249, 250));
+        g.fillRect(0, 0, width, height);
+
+        // Header
+        g.setColor(new Color(33, 37, 41));
+        g.setFont(new Font("SansSerif", Font.BOLD, 16));
+        g.drawString("Pixel-Level Confusion Matrix (LEVIR-CD)", 30, 35);
+
+        long total = tp + fp + fn + tn;
+        double pctTp = total > 0 ? (tp * 100.0 / total) : 0;
+        double pctFp = total > 0 ? (fp * 100.0 / total) : 0;
+        double pctFn = total > 0 ? (fn * 100.0 / total) : 0;
+        double pctTn = total > 0 ? (tn * 100.0 / total) : 0;
+
+        g.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        g.setColor(new Color(108, 117, 125));
+        g.drawString(String.format("Total Evaluated Pixels: %,d | Binary Change Detection", total), 30, 55);
+
+        int gridX = 140;
+        int gridY = 90;
+        int cellSize = 150;
+
+        // Column Labels (Ground Truth)
+        g.setFont(new Font("SansSerif", Font.BOLD, 12));
+        g.setColor(new Color(33, 37, 41));
+        g.drawString("Actual Change", gridX + 30, gridY - 10);
+        g.drawString("Actual No-Change", gridX + cellSize + 20, gridY - 10);
+
+        // Row Labels (Predicted)
+        g.drawString("Pred Change", 30, gridY + 80);
+        g.drawString("Pred No-Change", 18, gridY + cellSize + 80);
+
+        // Cell 1: TP (Actual+, Pred+)
+        g.setColor(new Color(212, 237, 218)); // Light green
+        g.fillRect(gridX, gridY, cellSize, cellSize);
+        g.setColor(new Color(40, 167, 69));
+        g.drawRect(gridX, gridY, cellSize, cellSize);
+        g.setFont(new Font("SansSerif", Font.BOLD, 14));
+        g.drawString("True Positive (TP)", gridX + 15, gridY + 50);
+        g.setFont(new Font("SansSerif", Font.BOLD, 16));
+        g.drawString(String.format("%,d", tp), gridX + 15, gridY + 80);
+        g.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        g.drawString(String.format("(%.2f%%)", pctTp), gridX + 15, gridY + 105);
+
+        // Cell 2: FP (Actual-, Pred+)
+        g.setColor(new Color(248, 215, 218)); // Light red
+        g.fillRect(gridX + cellSize, gridY, cellSize, cellSize);
+        g.setColor(new Color(220, 53, 69));
+        g.drawRect(gridX + cellSize, gridY, cellSize, cellSize);
+        g.setFont(new Font("SansSerif", Font.BOLD, 14));
+        g.drawString("False Positive (FP)", gridX + cellSize + 15, gridY + 50);
+        g.setFont(new Font("SansSerif", Font.BOLD, 16));
+        g.drawString(String.format("%,d", fp), gridX + cellSize + 15, gridY + 80);
+        g.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        g.drawString(String.format("(%.2f%%)", pctFp), gridX + cellSize + 15, gridY + 105);
+
+        // Cell 3: FN (Actual+, Pred-)
+        g.setColor(new Color(255, 243, 205)); // Light yellow
+        g.fillRect(gridX, gridY + cellSize, cellSize, cellSize);
+        g.setColor(new Color(255, 193, 7));
+        g.drawRect(gridX, gridY + cellSize, cellSize, cellSize);
+        g.setFont(new Font("SansSerif", Font.BOLD, 14));
+        g.drawString("False Negative (FN)", gridX + 15, gridY + cellSize + 50);
+        g.setFont(new Font("SansSerif", Font.BOLD, 16));
+        g.drawString(String.format("%,d", fn), gridX + 15, gridY + cellSize + 80);
+        g.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        g.drawString(String.format("(%.2f%%)", pctFn), gridX + 15, gridY + cellSize + 105);
+
+        // Cell 4: TN (Actual-, Pred-)
+        g.setColor(new Color(209, 236, 241)); // Light cyan
+        g.fillRect(gridX + cellSize, gridY + cellSize, cellSize, cellSize);
+        g.setColor(new Color(23, 162, 184));
+        g.drawRect(gridX + cellSize, gridY + cellSize, cellSize, cellSize);
+        g.setFont(new Font("SansSerif", Font.BOLD, 14));
+        g.drawString("True Negative (TN)", gridX + cellSize + 15, gridY + cellSize + 50);
+        g.setFont(new Font("SansSerif", Font.BOLD, 16));
+        g.drawString(String.format("%,d", tn), gridX + cellSize + 15, gridY + cellSize + 80);
+        g.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        g.drawString(String.format("(%.2f%%)", pctTn), gridX + cellSize + 15, gridY + cellSize + 105);
+
+        g.dispose();
+        Files.createDirectories(outputPath.getParent());
+        ImageIO.write(img, "PNG", outputPath.toFile());
+        logger.info("Saved visual confusion matrix to {}", outputPath.toAbsolutePath());
     }
 
     /**
@@ -145,7 +250,7 @@ public class ModelComparisonRunner {
 
         // Draw axes
         g.setColor(new Color(200, 205, 210));
-        g.drawLine(StartXAxis(startX), baseY, startX + groupCount * groupWidth, baseY);
+        g.drawLine(startXAxis(startX), baseY, startX + groupCount * groupWidth, baseY);
 
         Color colorBaseline = new Color(70, 130, 180);  // Steel Blue
         Color colorDL = new Color(40, 167, 69);         // Forest Green
@@ -199,7 +304,7 @@ public class ModelComparisonRunner {
         logger.info("Saved comparison chart to {}", outputPath.toAbsolutePath());
     }
 
-    private static int StartXAxis(int startX) {
+    private static int startXAxis(int startX) {
         return startX - 10;
     }
 

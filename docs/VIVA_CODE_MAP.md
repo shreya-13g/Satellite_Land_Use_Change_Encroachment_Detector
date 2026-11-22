@@ -159,12 +159,45 @@ This document contains **only the essential classes** needed to explain the enti
 
 ---
 
-### 14. `TemporalLandUseDemo.java`
-* **File:** `src/main/java/com/satellite/temporal/TemporalLandUseDemo.java`
-* **Purpose:** Demonstrates temporal sequence modeling of multi-year land-use transitions without overcomplicating.
+### 14. `TemporalLandUseDemo.java` & `LSTMCell.java`
+* **Files:** `src/main/java/com/satellite/temporal/TemporalLandUseDemo.java`, `LSTMCell.java`
+* **Purpose:** Demonstrates temporal sequence modeling of multi-year land-use transitions using gated LSTM and self-attention.
 * **Important Method:** `runTemporalDemo(int[] years, double[] builtUpPercentages)`
 * **Input:** Time series of observation years and built-up land percentages (e.g., 2018: 10%, 2020: 13%, 2022: 17%, 2024: 23%, 2026: 31%).
-* **Output:** Forecast for future time point (e.g., 2028: 41.1%) and annual expansion rate.
+* **Output:** Forecast for future time point (e.g., 2028: 36.2%), LSTM internal gate states, and self-attention matrix.
 * **Algorithm (3 sentences):**
-  Computes the compound annual growth rate across the historical bi-temporal sequence. Updates a recurrent hidden state $h_t = \tanh(w_h \cdot h_{t-1} + w_x \cdot x_t)$ to capture expansion momentum over time. Projects the next temporal horizon by combining growth rate trends with the recurrent persistence state.
+  Processes sequential observations through a full LSTM cell featuring forget gate ($f_t$), input gate ($i_t$), candidate cell state ($\tilde{c}_t$), and output gate ($o_t$). Computes scaled dot-product self-attention across observation embeddings to capture long-range temporal dependencies. Projects future built-up percentage by modulating compound annual growth with the final LSTM hidden state.
+
+---
+
+### 15. `ConvolutionDemo.java`
+* **File:** `src/main/java/com/satellite/fundamentals/ConvolutionDemo.java`
+* **Purpose:** Demonstrates discrete 2D spatial convolution and 3D spatio-temporal/multispectral tensor convolution (Requirement 7).
+* **Important Method:** `convolve2D(double[][] input, double[][] kernel)`
+* **Input:** 2D satellite feature patch and convolution kernels (Sobel-X, Sobel-Y, Laplacian, Gaussian blur, Sharpen).
+* **Output:** Filtered spatial feature maps, post-ReLU activated maps, and composite visual board in `visualizations/convolution_feature_maps.png`.
+
+---
+
+### 16. `RobustnessAnalysis.java`
+* **File:** `src/main/java/com/satellite/evaluation/RobustnessAnalysis.java`
+* **Purpose:** Evaluates system stability and degradation under environmental and sensor perturbations (Requirement 10).
+* **Important Method:** `runRobustnessSuite(Path dataRoot, int sampleLimit)`
+* **Input:** LEVIR-CD benchmark test tiles with synthetic perturbations (Gaussian noise $\sigma=15, 30$, brightness shifts $\pm 30$, contrast scale, 1px spatial jitter).
+* **Output:** Quantitative degradation metrics in `experiments/robustness_results.csv` and error analysis report in `experiments/robustness_report.md`.
+
+---
+
+### 17. `AblationRunner.java`
+* **File:** `src/main/java/com/satellite/mlp/AblationRunner.java`
+* **Purpose:** Systematic ablation study across hyperparameters and empirical demonstration of overfitting (Requirement 5).
+* **Important Method:** `runAllAblations()` and `runOverfittingStudy(Path outputCsv)`
+* **Output:** Ablation matrix in `experiments/ablation_results.csv` and train vs validation divergence curves in `experiments/overfitting_curves.csv`.
+
+---
+
+### 18. `dashboard/app.py`
+* **File:** `dashboard/app.py`
+* **Purpose:** Lightweight graphical user interface (Streamlit) for interactive demonstration and model benchmarking.
+* **Key Capabilities:** Interactive before/after tile selection and file upload, threshold/Otsu slider controls, side-by-side display of original images and change masks, real-time bounding box visualization, confusion matrix and benchmark charts.
 

@@ -25,13 +25,22 @@ public class ChangeMaskGenerator {
      * 0 = no change
      */
     public byte[][] generateMask(float[][] diffMap) {
+        return generateMask(diffMap, false);
+    }
+
+    /**
+     * Binarizes a difference map into a 2D byte array using either static threshold or Otsu adaptive thresholding.
+     */
+    public byte[][] generateMask(float[][] diffMap, boolean useOtsu) {
         int height = diffMap.length;
         int width = diffMap[0].length;
         byte[][] mask = new byte[height][width];
 
+        double effectiveThreshold = useOtsu ? computeOtsuThreshold(diffMap) : this.threshold;
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                mask[y][x] = (diffMap[y][x] >= threshold) ? (byte) 1 : (byte) 0;
+                mask[y][x] = (diffMap[y][x] >= effectiveThreshold) ? (byte) 1 : (byte) 0;
             }
         }
         return mask;
